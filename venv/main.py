@@ -23,3 +23,5 @@ rows = cur.fetchall()
 
 for row in rows[:100]:
     print(row)
+
+
