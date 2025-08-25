@@ -1,3 +1,4 @@
+import pandas as pd
 import psycopg2
 
 try:
@@ -10,16 +11,29 @@ try:
     )
     print("Conexão estabelecida com sucesso!")
 
+    query = """
+        SELECT
+            datafaturamento,
+            codigoproduto,
+            precounitario,
+            quantidadenegociada,
+            (precounitario * quantidadenegociada) AS faturamento
+        FROM
+            dbo.bi_fato
+        WHERE
+            tipomovumento IN ('V', 'B')
+            AND datafaturamento >= CURRENT_DATE - INTERVAL '12 months';
+    """
+
+    df = pd.read_sql(query, connect)
+    print("Dados carregados com sucesso!")
+    print(df.head())  # Mostra as 5 primeiras linhas para conferir
+
 except psycopg2.Error as e:
-    print("Erro ao conectar ao banco de dados", e)
+    print("Erro ao conectar:", e)
 
+finally:
+    if connect:
+        connect.close()
+        print("Conexão fechada")
 
-cur = connect.cursor()
-
-
-cur.execute("SELECT * FROM dbo.bi_fato WHERE datafaturamento = '2025-08-14';")
-
-rows = cur.fetchall()
-
-for row in rows[:100]:
-    print(row)
