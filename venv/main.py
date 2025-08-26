@@ -1,15 +1,18 @@
 import pandas as pd
 import psycopg2
 import matplotlib.pyplot as plt # type: ignore
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 try:
     connect = psycopg2.connect(
-        database="CPlus5",
-        user="consulta",
-        password="vvs@2025@",
-        host="192.168.10.225",
-        port="5432"
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT")
     )
     print("Conexão estabelecida com sucesso!")
 
