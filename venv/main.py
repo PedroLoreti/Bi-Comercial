@@ -4,6 +4,12 @@ import matplotlib.pyplot as plt # type: ignore
 from dotenv import load_dotenv
 import os
 
+#Config para vermos todas as informações na Saída do Terminal
+pd.set_option('display.max_columns', None)
+pd.set_option('display.expand_frame_repr', False)
+pd.set_option('display.width', None)
+
+
 load_dotenv()
 
 try:
@@ -18,24 +24,30 @@ try:
 
     query = """
         SELECT
-            datafaturamento,
-            codigoproduto,
-            precounitario,
-            quantidadenegociada,
-            (precounitario * quantidadenegociada) AS faturamento
+            ft.datafaturamento,
+            ft.codigoproduto,
+            pt.marca,
+            ft.precounitario,
+            ft.quantidadenegociada,
+            (ft.precounitario * ft.quantidadenegociada) AS faturamento
         FROM
-            dbo.bi_fato
+            dbo.bi_fato AS ft
+        INNER JOIN
+            dbo.bi_produto AS pt
+        ON
+            ft.codigoproduto = pt.codigoproduto 
         WHERE
-            tipomovumento IN ('V', 'B')
-            AND datafaturamento >= CURRENT_DATE - INTERVAL '3 months';
+            ft.tipomovumento IN ('V', 'B')
+            AND ft.datafaturamento >= CURRENT_DATE - INTERVAL '3 months';
     """
 
     df = pd.read_sql(query, connect)
 
     # Agrupar e ordenar os produtos -- Vinicius
     df_produto = (
-        df.groupby('codigoproduto', as_index=False)
-          .agg({'faturamento': 'sum'})
+        df.groupby(['codigoproduto', 'marca'], as_index=False)
+          .agg({'faturamento': 'sum',
+                'quantidadenegociada' : 'sum'})
           .sort_values(by='faturamento', ascending=False)
     )
 
@@ -56,7 +68,7 @@ try:
 
     df_produto['Classificacao'] = df_produto['PorcentAcumulado'].apply(classificar)
 
-    print(df_produto)
+    print(df_produto.head(20))
 
 except psycopg2.Error as e:
     print("Erro ao conectar:", e)
