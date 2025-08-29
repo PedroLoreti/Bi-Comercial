@@ -78,3 +78,4 @@ finally:
     if connect:
         connect.close()
         print("Conexão fechada")
+        print("Fim da execução")
