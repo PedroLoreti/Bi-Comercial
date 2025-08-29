@@ -24,28 +24,29 @@ try:
 
     query = """
         SELECT
-            ft.datafaturamento,
-            ft.codigoproduto,
-            pt.marca,
-            ft.precounitario,
-            ft.quantidadenegociada,
-            (ft.precounitario * ft.quantidadenegociada) AS faturamento
+            bf.datafaturamento,
+            bf.codigoproduto,
+            bp.nomeproduto,
+            bp.marca,
+            bf.precounitario,
+            bf.quantidadenegociada,
+            (bf.precounitario * bf.quantidadenegociada) AS faturamento
         FROM
-            dbo.bi_fato AS ft
+            dbo.bi_fato AS bf
         INNER JOIN
-            dbo.bi_produto AS pt
+            dbo.bi_produto AS bp
         ON
-            ft.codigoproduto = pt.codigoproduto 
+            bf.codigoproduto = bp.codigoproduto 
         WHERE
-            ft.tipomovumento IN ('V', 'B')
-            AND ft.datafaturamento >= CURRENT_DATE - INTERVAL '3 months';
+            bf.tipomovumento IN ('V', 'B')
+            AND bf.datafaturamento >= CURRENT_DATE - INTERVAL '3 months';
     """
 
     df = pd.read_sql(query, connect)
 
     # Agrupar e ordenar os produtos -- Vinicius
     df_produto = (
-        df.groupby(['codigoproduto', 'marca'], as_index=False)
+        df.groupby(['codigoproduto','nomeproduto','marca'], as_index=False)
           .agg({'faturamento': 'sum',
                 'quantidadenegociada' : 'sum'})
           .sort_values(by='faturamento', ascending=False)
